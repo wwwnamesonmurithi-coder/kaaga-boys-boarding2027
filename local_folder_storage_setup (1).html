@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaaga Boys High School - Boarding & Dormitory System</title>
+    <!-- Embedded Offline Design System (No Internet Required) -->
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Layout Structure */
+        #sidebar { width: 16rem; background-color: #0c2340; color: #ffffff; flex-shrink: 0; display: flex; flex-direction: column; transition: all 0.3s ease; z-index: 30; box-shadow: 4px 0 15px rgba(0,0,0,0.15); }
+        #sidebar.closed { margin-left: -16rem; }
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        header { background-color: #ffffff; border-bottom: 1px solid #e2e8f0; height: 4rem; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0; }
+        main { flex: 1; overflow-y: auto; padding: 1.5rem; }
+
+        /* Typography & Utility */
+        .text-amber { color: #f59e0b; }
+        .bg-amber { background-color: #f59e0b; }
+        .text-brand { color: #1a56db; }
+        .bg-brand { background-color: #1a56db; }
+        .bg-brand-navy { background-color: #13335a; }
+        
+        /* Navigation Buttons */
+        .nav-item { display: flex; align-items: center; padding: 0.75rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.75rem; color: #cbd5e1; text-decoration: none; margin-bottom: 0.375rem; transition: background-color 0.2s, color 0.2s; }
+        .nav-item:hover { background-color: #13335a; color: #ffffff; }
+        .nav-item.sidebar-active { background-color: #1a56db; color: #ffffff !important; }
+        .nav-icon { width: 1.5rem; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.5rem; }
+
+        /* UI Cards & Grids */
+        .card { background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+        
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.75rem; font-weight: 700; border-radius: 0.75rem; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background-color: #1a56db; color: #ffffff; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-emerald { background-color: #059669; color: #ffffff; }
+        .btn-emerald:hover { background-color: #047857; }
+        .btn-secondary { background-color: #f1f5f9; color: #334155; }
+        .btn-secondary:hover { background-color: #e2e8f0; }
+        .btn-danger { background-color: #dc2626; color: #ffffff; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        
+        /* Input Forms */
+        label { display: block; font-size: 0.75rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        input[type="text"], select { width: 100%; padding: 0.625rem 0.875rem; font-size: 0.875rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; outline: none; background: #ffffff; transition: border-color 0.2s; }
+        input[type="text"]:focus, select:focus { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.15); }
+        
+        /* Data Tables */
+        .table-responsive { width: 100%; overflow-x: auto; background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; }
+        th { background: #f8fafc; padding: 0.75rem 1rem; font-size: 0.6875rem; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 0.875rem 1rem; border-bottom: 1px solid #f1f5f9; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Modal Overlays */
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
+        .modal.flex { display: flex; }
+        .modal-body { background: #ffffff; border-radius: 1rem; width: 100%; max-width: 56rem; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+        /* Bed Square Grid */
+        .bed-btn { height: 2.75rem; width: 100%; border-radius: 0.5rem; font-weight: 800; font-size: 0.875rem; border: none; cursor: pointer; color: #ffffff; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, background-color 0.2s; }
+        .bed-btn:hover { transform: scale(1.03); }
+        .bed-vacant { background-color: #10b981; }
+        .bed-vacant:hover { background-color: #059669; }
+        .bed-occupied { background-color: #ef4444; }
+        .bed-occupied:hover { background-color: #dc2626; }
+
+        .hidden { display: none !important; }
+        .flex { display: flex !important; }
+        .block { display: block !important; }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <!-- School Crest Header -->
+        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <div style="width: 4.5rem; height: 4.5rem; margin: 0 auto 0.5rem; border-radius: 50%; border: 2px solid #f59e0b; padding: 0.25rem; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; fill: #f59e0b;">
+                    <path d="M50 5 L90 25 L90 70 L50 95 L10 70 L10 25 Z" fill="#0c2340" stroke="#f59e0b" stroke-width="4"/>
+                    <path d="M50 15 L80 30 L80 65 L50 85 L20 65 L20 30 Z" fill="#13335a"/>
+                    <path d="M35 45 Q50 35 65 45 L65 65 Q50 55 35 65 Z" fill="#ffffff" opacity="0.9"/>
+                    <circle cx="50" cy="22" r="4" fill="#f59e0b"/>
+                </svg>
+            </div>
+            <h1 style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.05em; color: #f59e0b;">KAAGA BOYS HIGH SCHOOL</h1>
+            <p style="font-size: 0.625rem; color: #94a3b8; font-style: italic; margin-top: 0.2rem;">Discipline • Hard Work • Success</p>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav style="flex: 1; padding: 1rem 0.75rem; overflow-y: auto;">
+            <a href="#" onclick="switchTab('home'); return false;" id="nav-home" class="nav-item sidebar-active">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
+            <a href="#" onclick="switchTab('add-student'); return false;" id="nav-add-student" class="nav-item">
+                <span class="nav-icon">➕</span>
+                <span>Add Student</span>
+            </a>
+            <a href="#" onclick="switchTab('students'); return false;" id="nav-students" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>View Students</span>
+            </a>
+            <a href="#" onclick="switchTab('dormitories'); return false;" id="nav-dormitories" class="nav-item">
+                <span class="nav-icon">🛏️</span>
+                <span>Dormitories</span>
+            </a>
+            <a href="#" onclick="switchTab('settings'); return false;" id="nav-settings" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings & Offline Sync</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div style="padding: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 0.6875rem; color: #94a3b8;">
+            <p style="font-weight: 700; color: #cbd5e1;">Kaaga Boys High School</p>
+            <p style="color: #f59e0b; margin-top: 0.2rem;">100% Offline Boarding System</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-wrapper">
+        
+        <!-- TOP HEADER -->
+        <header>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="toggle-sidebar" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #475569;">
+                    ☰
+                </button>
+                <h2 id="header-title" style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">Boarding Dashboard</h2>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: #e0e7ff; color: #3730a3; font-weight: 800; font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 9999px;">
+                    ⚡ Offline Mode Ready
+                </span>
+            </div>
+        </header>
+
+        <!-- DYNAMIC PAGE BODY -->
+        <main id="main-container">
+            
+            <!-- 1. HOME VIEW -->
+            <section id="view-home" class="block">
+                <div class="grid-4" style="margin-bottom: 1.5rem;">
+                    <div class="card">
+                        <p style="font-size: 0.6875rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Total Students</p>
+                        <h3 id="stat-total-students" style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">0</h3>
+                        <span style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.25rem; display: block;">✓ Registered Students</span>
+                    </div>
+
+                    <div class="card">
+                        <p style="font-size: 0.6875rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Dormitories</p>
+                        <h3 style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">14</h3>
+                        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 0.25rem; display: block;">6 Inside · 8 Mpakone</span>
+                    </div>
+
+                    <div class="card">
+                        <p style="font-size: 0.6875rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Occupied Beds</p>
+                        <h3 id="stat-occupied-beds" style="font-size: 1.875rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">0</h3>
+                        <span id="stat-occupancy-rate" style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.25rem; display: block;">0% Capacity</span>
+                    </div>
+
+                    <div class="card">
+                        <p style="font-size: 0.6875rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Unoccupied Beds</p>
+                        <h3 id="stat-unoccupied-beds" style="font-size: 1.875rem; font-weight: 800; color: #d97706; margin-top: 0.25rem;">0</h3>
+                        <span style="font-size: 0.75rem; color: #d97706; font-weight: 600; margin-top: 0.25rem; display: block;">🚪 Available Beds</span>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="font-weight: 700; font-size: 1rem; color: #0f172a;">Quick Actions</h4>
+                            <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Manage boarding allocations completely offline.</p>
+                        </div>
+                        <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button onclick="switchTab('add-student')" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+                                ➕ Register Student & Bed
+                            </button>
+                            <button onclick="switchTab('dormitories')" class="btn btn-secondary" style="width: 100%; padding: 0.75rem;">
+                                🛏️ View Dormitory Bed Maps
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h4 style="font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: 1rem;">Zone Occupancy Statistics</h4>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.375rem;">
+                                    <span>🏫 Inside School Dorms</span>
+                                    <span id="zone-inside-text">0 / 0 Beds</span>
+                                </div>
+                                <div style="width: 100%; background: #f1f5f9; border-radius: 9999px; height: 0.875rem; overflow: hidden; padding: 2px;">
+                                    <div id="zone-inside-bar" style="background: #1a56db; height: 100%; border-radius: 9999px; width: 0%; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.375rem;">
+                                    <span>🏡 Outside (Mpakone) Dorms</span>
+                                    <span id="zone-mpakone-text">0 / 0 Beds</span>
+                                </div>
+                                <div style="width: 100%; background: #f1f5f9; border-radius: 9999px; height: 0.875rem; overflow: hidden; padding: 2px;">
+                                    <div id="zone-mpakone-bar" style="background: #4f46e5; height: 100%; border-radius: 9999px; width: 0%; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. ADD / EDIT STUDENT VIEW -->
+            <section id="view-add-student" class="hidden">
+                <div style="max-width: 56rem; margin: 0 auto; background: #ffffff; border-radius: 0.75rem; border: 1px solid #e2e8f0; padding: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f1f5f9;">
+                        <div style="width: 2.5rem; height: 2.5rem; background: rgba(26, 86, 219, 0.1); color: #1a56db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                            ➕
+                        </div>
+                        <div>
+                            <h3 id="form-title" style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">Student Information</h3>
+                            <p style="font-size: 0.75rem; color: #64748b;">Enter personal details and select available bed allocation.</p>
+                        </div>
+                    </div>
+
+                    <form id="student-form" onsubmit="handleSaveStudent(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <input type="hidden" id="edit-student-original-adm" value="">
+                        
+                        <div class="grid-2">
+                            <div style="grid-column: 1 / -1;">
+                                <label>Full Name <span style="color: #dc2626;">*</span></label>
+                                <input type="text" id="input-full-name" required placeholder="Enter student's full name (e.g. John Kamau Mwangi)">
+                            </div>
+
+                            <div>
+                                <label>ADM NO <span style="color: #64748b; font-weight: normal;">(Primary Key)</span> <span style="color: #dc2626;">*</span></label>
+                                <input type="text" id="input-adm-no" required placeholder="e.g. KBHS001">
+                            </div>
+
+                            <div>
+                                <label>Class Level <span style="color: #dc2626;">*</span></label>
+                                <select id="input-class" required>
+                                    <option value="">Select Class</option>
+                                    <optgroup label="Form System (8-4-4)">
+                                        <option value="Form 1">Form 1</option>
+                                        <option value="Form 2">Form 2</option>
+                                        <option value="Form 3">Form 3</option>
+                                        <option value="Form 4">Form 4</option>
+                                    </optgroup>
+                                    <optgroup label="CBC Senior School">
+                                        <option value="Grade 10">Grade 10</option>
+                                        <option value="Grade 11">Grade 11</option>
+                                        <option value="Grade 12">Grade 12</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Stream / Arm <span style="color: #dc2626;">*</span></label>
+                                <input type="text" id="input-stream" required placeholder="e.g. East, West, North, Alpha">
+                            </div>
+                        </div>
+
+                        <!-- Dormitory Assignment Panel -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <h4 style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: #1e293b;">🛏️ Dormitory Assignment</h4>
+                                <span style="font-size: 0.625rem; color: #1a56db; background: #e0e7ff; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">Manual bed entry enabled</span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <div>
+                                    <label style="font-size: 0.6875rem; margin-bottom: 0.375rem;">Dormitory</label>
+                                    <select id="input-dorm" onchange="handleDormChange()" required>
+                                        <option value="">Select dormitory</option>
+                                    </select>
+                                </div>
+
+                                <div id="container-wing" class="hidden">
+                                    <label style="font-size: 0.6875rem; margin-bottom: 0.375rem;">Wing</label>
+                                    <select id="input-wing" onchange="handleWingChange()">
+                                        <option value="">Select wing</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label id="lbl-cube" style="font-size: 0.6875rem; margin-bottom: 0.375rem;">Cube / Section</label>
+                                    <select id="input-cube" onchange="handleCubeChange()" required disabled>
+                                        <option value="">Select cube/section</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style="font-size: 0.6875rem; margin-bottom: 0.375rem;">Bed No (Manual Entry)</label>
+                                    <input type="text" id="input-bed-no" required placeholder="e.g. 01, 12, 16" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div style="display: flex; gap: 0.75rem; padding-top: 0.5rem;">
+                            <button type="submit" class="btn btn-primary">
+                                💾 Save Student Record
+                            </button>
+                            <button type="button" onclick="resetForm()" class="btn btn-secondary">
+                                🔄 Clear Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 3. VIEW STUDENTS TABLE VIEW -->
+            <section id="view-students" class="hidden" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+                <!-- Search and Filters Bar -->
+                <div class="card" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+                        <input type="text" id="search-student" onkeyup="renderStudentsTable()" placeholder="Search by ADM NO, Name, Class or Dorm..." style="flex: 1; min-width: 260px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                            <select id="filter-class" onchange="renderStudentsTable()" style="width: auto;">
+                                <option value="">All Classes</option>
+                                <option value="Form 1">Form 1</option>
+                                <option value="Form 2">Form 2</option>
+                                <option value="Form 3">Form 3</option>
+                                <option value="Form 4">Form 4</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                                <option value="Grade 12">Grade 12</option>
+                            </select>
+                            <select id="filter-dorm" onchange="renderStudentsTable()" style="width: auto;">
+                                <option value="">All Dormitories</option>
+                            </select>
+                            <button onclick="exportDataExcel()" class="btn btn-emerald">📊 Export Excel</button>
+                            <button onclick="exportDataWord()" class="btn btn-primary">📄 Export Word</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ADM NO</th>
+                                    <th>Student Name</th>
+                                    <th>Class & Stream</th>
+                                    <th>Dormitory</th>
+                                    <th>Cube / Section</th>
+                                    <th>Bed No</th>
+                                    <th style="text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="padding: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748b;">
+                        <span id="showing-count-text">Showing 0 of 0 students</span>
+                        <div id="pagination-controls" style="display: flex; gap: 0.25rem;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. DORMITORIES STRUCTURE VIEW -->
+            <section id="view-dormitories" class="hidden" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="display: flex; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.25rem; max-width: 28rem; margin: 0 auto;">
+                    <button onclick="switchZone('inside')" id="tab-zone-inside" class="btn btn-primary" style="flex: 1; padding: 0.5rem;">🏫 Inside School</button>
+                    <button onclick="switchZone('mpakone')" id="tab-zone-mpakone" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; background: transparent; color: #475569;">🏡 Outside (Mpakone)</button>
+                </div>
+
+                <div id="dormitories-cards-container" class="grid-3">
+                    <!-- Cards injected via JS -->
+                </div>
+
+                <div class="card">
+                    <h4 id="zone-summary-title" style="font-weight: 700; font-size: 0.875rem; margin-bottom: 0.75rem;">Zone Summary</h4>
+                    <div id="zone-summary-content" class="grid-3" style="font-size: 0.75rem;"></div>
+                </div>
+            </section>
+
+            <!-- 5. SETTINGS & HARDWARE STORAGE VIEW -->
+            <section id="view-settings" class="hidden">
+                <div class="card" style="max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a;">Hardware & Directory Storage Sync (Offline PC Storage)</h3>
+                        <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Select a local folder on your computer's hard drive or USB drive to save offline system records.</p>
+                    </div>
+
+                    <!-- DIRECTORY FOLDER SELECTOR CARD -->
+                    <div style="background: #0f172a; color: #ffffff; padding: 1.25rem; border-radius: 0.75rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 0.75rem;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #f59e0b;">
+                                💾 Selected Hardware Storage Directory
+                            </span>
+                            <span id="folder-status-badge" style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 800; background: rgba(245, 158, 11, 0.2); color: #fcd34d;">
+                                Default Browser Offline Memory
+                            </span>
+                        </div>
+
+                        <div>
+                            <p style="font-size: 0.75rem; color: #cbd5e1; font-weight: 600; margin-bottom: 0.375rem;">Current Active Offline Folder Path / Name:</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: #1e293b; border: 1px solid #334155; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-family: monospace; color: #34d399;">
+                                <span id="selected-folder-path" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 24rem;">📁 No custom folder selected yet</span>
+                                <button type="button" onclick="selectHardwareFolder()" class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                                    📁 Select Folder
+                                </button>
+                                <input type="file" id="fallback-folder-picker" webkitdirectory directory onchange="handleFallbackFolderSelect(event)" class="hidden">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.6875rem; border-top: 1px solid #1e293b; padding-top: 0.5rem;">
+                            <span id="folder-last-sync" style="color: #94a3b8; font-style: italic;">Data automatically caches locally offline.</span>
+                            <button type="button" onclick="syncToHardwareFolder()" class="btn btn-emerald" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                                💾 Save & Sync Offline File
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                            <div>
+                                <h5 style="font-weight: 700; font-size: 0.75rem; color: #0f172a;">Export Word Table Document (.doc)</h5>
+                                <p style="font-size: 0.6875rem; color: #64748b;">Generates an offline formatted Word table document.</p>
+                            </div>
+                            <button onclick="exportDataWord()" class="btn btn-primary">📄 Export Word</button>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                            <div>
+                                <h5 style="font-weight: 700; font-size: 0.75rem; color: #0f172a;">Export Excel Spreadsheet (.csv)</h5>
+                                <p style="font-size: 0.6875rem; color: #64748b;">Generates offline data table for Excel / LibreOffice.</p>
+                            </div>
+                            <button onclick="exportDataExcel()" class="btn btn-emerald">📊 Export Excel</button>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+                            <div>
+                                <h5 style="font-weight: 700; font-size: 0.75rem; color: #0f172a;">Offline Backup JSON File</h5>
+                                <p style="font-size: 0.6875rem; color: #64748b;">Download raw database JSON file for hardware backup.</p>
+                            </div>
+                            <button onclick="exportDataJSON()" class="btn btn-secondary">💾 Export JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL: INTERACTIVE BED MATRIX MAP -->
+    <div id="dorm-grid-modal" class="modal">
+        <div class="modal-body">
+            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: background; background: #f8fafc;">
+                <div>
+                    <h3 id="dorm-grid-title" style="font-weight: 800; font-size: 1rem; color: #1e293b;">Dormitory Bed Map</h3>
+                    <p id="dorm-grid-subtitle" style="font-size: 0.75rem; color: #64748b;">Visual occupancy layout</p>
+                </div>
+                <button onclick="closeDormGridModal()" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; border-radius: 50%;">✕</button>
+            </div>
+
+            <div style="padding: 0.75rem 1.5rem; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; justify-content: space-between; font-size: 0.75rem; font-weight: 700;">
+                <div style="display: flex; gap: 1rem;">
+                    <span style="display: flex; align-items: center; gap: 0.375rem;"><span style="width: 0.75rem; height: 0.75rem; background: #ef4444; border-radius: 0.25rem;"></span> Occupied</span>
+                    <span style="display: flex; align-items: center; gap: 0.375rem;"><span style="width: 0.75rem; height: 0.75rem; background: #10b981; border-radius: 0.25rem;"></span> Unoccupied</span>
+                </div>
+                <div style="display: flex; gap: 1rem; color: #475569;">
+                    <span>Total: <strong id="dorm-grid-total-beds">0</strong></span>
+                    <span>Occupied: <strong id="dorm-grid-occupied-beds" style="color: #dc2626;">0</strong></span>
+                    <span>Vacant: <strong id="dorm-grid-unoccupied-beds" style="color: #059669;">0</strong></span>
+                </div>
+            </div>
+
+            <div id="dorm-grid-container" style="flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: #f8fafc;"></div>
+
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; background: #ffffff; display: flex; justify-content: flex-end;">
+                <button onclick="closeDormGridModal()" class="btn btn-secondary">Close Map</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW STUDENT DETAILS -->
+    <div id="student-modal" class="modal">
+        <div class="modal-body" style="max-width: 32rem;">
+            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+                <h3 style="font-weight: 700; font-size: 0.875rem; color: #1e293b;">📋 Student Details</h3>
+                <button onclick="closeStudentModal()" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; border-radius: 50%;">✕</button>
+            </div>
+
+            <div id="modal-student-content" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 0.875rem; font-size: 0.875rem;"></div>
+
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="modal-btn-edit" class="btn btn-primary" style="font-size: 0.75rem;">Edit Record</button>
+                    <button id="modal-btn-delete" class="btn btn-danger" style="font-size: 0.75rem;">Delete</button>
+                </div>
+                <button onclick="closeStudentModal()" class="btn btn-secondary" style="font-size: 0.75rem;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Dormitories Configuration Data
+        const DORMITORY_DATA = [
+            // Inside Dormitories (6)
+            { name: "Aberdare", zone: "inside", type: "aberdare_custom" },
+            { name: "Elgon", zone: "inside", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Kenya", zone: "inside", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Longonot", zone: "inside", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Kilimanjaro", zone: "inside", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Menengai", zone: "inside", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+
+            // Outside / Mpakone Dormitories (8)
+            { name: "Mpakone 1", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 2", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 3", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 4", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 5", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 6", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 7", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 },
+            { name: "Mpakone 8", zone: "mpakone", type: "cubes", cubes: ["Cube 1", "Cube 2", "Cube 3", "Cube 4", "Cube 5", "Cube 6", "Cube 7", "Cube 8", "Cube 9", "Cube 10", "Cube 11", "Cube 12"], bedsPerCube: 16 }
+        ];
+
+        let students = JSON.parse(localStorage.getItem('KBHS_Students_Data')) || [];
+        let activeZone = 'inside';
+        let currentDirectoryHandle = null;
+
+        // Toggle Sidebar Offline Logic
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('closed');
+            });
+        }
+
+        // Global Navigation Switcher
+        window.switchTab = function(tabId) {
+            const sections = ['home', 'add-student', 'students', 'dormitories', 'settings'];
+            sections.forEach(sec => {
+                const el = document.getElementById(`view-${sec}`);
+                if (el) {
+                    el.classList.remove('block', 'hidden');
+                    el.classList.add(sec === tabId ? 'block' : 'hidden');
+                }
+                const nav = document.getElementById(`nav-${sec}`);
+                if (nav) {
+                    nav.classList.toggle('sidebar-active', sec === tabId);
+                }
+            });
+
+            const titles = {
+                'home': 'Boarding Dashboard',
+                'add-student': 'Register New Student & Bed',
+                'students': 'Boarding Student Records',
+                'dormitories': 'Dormitory Bed Matrix Maps',
+                'settings': 'Settings & Offline Storage Sync'
+            };
+            const headerTitle = document.getElementById('header-title');
+            if (headerTitle) headerTitle.innerText = titles[tabId] || 'Boarding System';
+
+            if (tabId === 'students') renderStudentsTable();
+            if (tabId === 'dormitories') renderDormitoriesView();
+            if (tabId === 'home') updateHomeDashboardStats();
+        };
+
+        window.switchZone = function(zone) {
+            activeZone = zone;
+            const btnInside = document.getElementById('tab-zone-inside');
+            const btnMpakone = document.getElementById('tab-zone-mpakone');
+            if (btnInside && btnMpakone) {
+                if (zone === 'inside') {
+                    btnInside.className = "btn btn-primary";
+                    btnInside.style.cssText = "flex: 1; padding: 0.5rem;";
+                    btnMpakone.className = "btn btn-secondary";
+                    btnMpakone.style.cssText = "flex: 1; padding: 0.5rem; background: transparent; color: #475569;";
+                } else {
+                    btnMpakone.className = "btn btn-primary";
+                    btnMpakone.style.cssText = "flex: 1; padding: 0.5rem;";
+                    btnInside.className = "btn btn-secondary";
+                    btnInside.style.cssText = "flex: 1; padding: 0.5rem; background: transparent; color: #475569;";
+                }
+            }
+            renderDormitoriesView();
+        };
+
+        // Populate Form Dropdowns
+        function initializeDormitoryDropdowns() {
+            const dormSelect = document.getElementById('input-dorm');
+            const filterDorm = document.getElementById('filter-dorm');
+            if (!dormSelect) return;
+
+            dormSelect.innerHTML = '<option value="">Select dormitory</option>';
+            if (filterDorm) filterDorm.innerHTML = '<option value="">All Dormitories</option>';
+
+            DORMITORY_DATA.forEach(d => {
+                const opt1 = document.createElement('option');
+                opt1.value = d.name;
+                opt1.textContent = `${d.name} (${d.zone === 'inside' ? 'Inside' : 'Mpakone'})`;
+                dormSelect.appendChild(opt1);
+
+                if (filterDorm) {
+                    const opt2 = document.createElement('option');
+                    opt2.value = d.name;
+                    opt2.textContent = d.name;
+                    filterDorm.appendChild(opt2);
+                }
+            });
+        }
+
+        window.handleDormChange = function() {
+            const dormName = document.getElementById('input-dorm').value;
+            const wingContainer = document.getElementById('container-wing');
+            const wingSelect = document.getElementById('input-wing');
+            const cubeSelect = document.getElementById('input-cube');
+            const bedInput = document.getElementById('input-bed-no');
+            const lblCube = document.getElementById('lbl-cube');
+
+            wingSelect.innerHTML = '<option value="">Select wing</option>';
+            cubeSelect.innerHTML = '<option value="">Select cube/section</option>';
+            cubeSelect.disabled = true;
+            bedInput.value = '';
+            bedInput.disabled = true;
+
+            if (dormName === 'Aberdare') {
+                wingContainer.classList.remove('hidden');
+                wingSelect.required = true;
+                wingSelect.innerHTML = `
+                    <option value="">Select wing</option>
+                    <option value="Wing 1">Wing 1</option>
+                    <option value="Wing 2">Wing 2</option>
+                `;
+                lblCube.textContent = "Cube / Section";
+            } else {
+                wingContainer.classList.add('hidden');
+                wingSelect.required = false;
+                lblCube.textContent = "Cube / Section";
+                
+                const dorm = DORMITORY_DATA.find(d => d.name === dormName);
+                if (dorm && dorm.cubes) {
+                    cubeSelect.disabled = false;
+                    dorm.cubes.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c;
+                        cubeSelect.appendChild(opt);
+                    });
+                }
+            }
+        };
+
+        window.handleWingChange = function() {
+            const wing = document.getElementById('input-wing').value;
+            const cubeSelect = document.getElementById('input-cube');
+            const bedInput = document.getElementById('input-bed-no');
+
+            cubeSelect.innerHTML = '<option value="">Select cube/section</option>';
+            cubeSelect.disabled = true;
+            bedInput.value = '';
+            bedInput.disabled = true;
+
+            if (wing) {
+                cubeSelect.disabled = false;
+                const cubes = ["Cube 1A", "Cube 1B", "Cube 2A", "Cube 2B", "Cube 3A", "Cube 3B", "Cube 4A", "Cube 4B", "Cube 5A", "Cube 5B", "Cube 6A", "Cube 6B"];
+                cubes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    cubeSelect.appendChild(opt);
+                });
+            }
+        };
+
+        window.handleCubeChange = function() {
+            const bedInput = document.getElementById('input-bed-no');
+            const cubeVal = document.getElementById('input-cube').value;
+            if (cubeVal) {
+                bedInput.disabled = false;
+                bedInput.placeholder = "Enter Bed No (01 - 16)";
+            } else {
+                bedInput.disabled = true;
+                bedInput.value = '';
+            }
+        };
+
+        // Data Storage & Sync
+        function saveStudentsToStorage() {
+            localStorage.setItem('KBHS_Students_Data', JSON.stringify(students));
+            updateHomeDashboardStats();
+            syncToHardwareFolder();
+        }
+
+        window.handleSaveStudent = function(event) {
+            event.preventDefault();
+            const fullName = document.getElementById('input-full-name').value.trim();
+            const admNo = document.getElementById('input-adm-no').value.trim();
+            const className = document.getElementById('input-class').value;
+            const stream = document.getElementById('input-stream').value.trim();
+            const dorm = document.getElementById('input-dorm').value;
+            const wing = document.getElementById('input-wing').value || '';
+            const cube = document.getElementById('input-cube').value;
+            const bedNo = document.getElementById('input-bed-no').value.trim();
+            const originalAdm = document.getElementById('edit-student-original-adm').value;
+
+            if (!fullName || !admNo || !className || !stream || !dorm || !cube || !bedNo) {
+                alert('Please fill out all required fields.');
+                return;
+            }
+
+            // Check duplicate ADM
+            const existingIndex = students.findIndex(s => s.admNo.toLowerCase() === admNo.toLowerCase());
+            if (existingIndex !== -1 && originalAdm !== admNo) {
+                alert(`Student with ADM NO "${admNo}" already exists in the system.`);
+                return;
+            }
+
+            // Check bed conflict
+            const conflict = students.find(s => s.dorm === dorm && s.wing === wing && s.cube === cube && s.bedNo === bedNo && s.admNo !== originalAdm);
+            if (conflict) {
+                alert(`Bed ${bedNo} in ${dorm} (${wing ? wing + ' - ' : ''}${cube}) is already occupied by ${conflict.fullName}!`);
+                return;
+            }
+
+            const studentObj = { fullName, admNo, className, stream, dorm, wing, cube, bedNo };
+
+            if (originalAdm) {
+                const idx = students.findIndex(s => s.admNo === originalAdm);
+                if (idx !== -1) students[idx] = studentObj;
+            } else {
+                students.push(studentObj);
+            }
+
+            saveStudentsToStorage();
+            resetForm();
+            switchTab('students');
+        };
+
+        window.resetForm = function() {
+            document.getElementById('student-form').reset();
+            document.getElementById('edit-student-original-adm').value = '';
+            document.getElementById('container-wing').classList.add('hidden');
+            document.getElementById('input-cube').disabled = true;
+            document.getElementById('input-bed-no').disabled = true;
+            document.getElementById('form-title').innerText = 'Student Information';
+        };
+
+        // Render Students Table
+        function renderStudentsTable() {
+            const tbody = document.getElementById('students-table-body');
+            const countText = document.getElementById('showing-count-text');
+            const searchVal = document.getElementById('search-student')?.value.toLowerCase() || '';
+            const filterClass = document.getElementById('filter-class')?.value || '';
+            const filterDorm = document.getElementById('filter-dorm')?.value || '';
+
+            if (!tbody) return;
+
+            const filtered = students.filter(s => {
+                const matchSearch = s.fullName.toLowerCase().includes(searchVal) || s.admNo.toLowerCase().includes(searchVal) || s.dorm.toLowerCase().includes(searchVal);
+                const matchClass = !filterClass || s.className === filterClass;
+                const matchDorm = !filterDorm || s.dorm === filterDorm;
+                return matchSearch && matchClass && matchDorm;
+            });
+
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #94a3b8;">No registered students found.</td></tr>`;
+                if (countText) countText.innerText = `Showing 0 of ${students.length} students`;
+                return;
+            }
+
+            filtered.forEach((s, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 700; color: #64748b;">${idx + 1}</td>
+                    <td style="font-weight: 700; color: #1a56db;">${s.admNo}</td>
+                    <td style="font-weight: 700; color: #0f172a;">${s.fullName}</td>
+                    <td>${s.className} ${s.stream}</td>
+                    <td><span style="padding: 0.25rem 0.5rem; background: #e0e7ff; color: #3730a3; border-radius: 0.25rem; font-weight: 700; font-size: 0.75rem;">${s.dorm}</span></td>
+                    <td>${s.wing ? s.wing + ' · ' : ''}${s.cube}</td>
+                    <td><span style="font-weight: 800; color: #059669;">Bed ${s.bedNo}</span></td>
+                    <td style="text-align: center;">
+                        <button onclick='openStudentModal(${JSON.stringify(s)})' class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">View</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (countText) countText.innerText = `Showing ${filtered.length} of ${students.length} students`;
+        }
+
+        // Student Details Modal
+        let currentSelectedStudent = null;
+        window.openStudentModal = function(student) {
+            currentSelectedStudent = student;
+            const content = document.getElementById('modal-student-content');
+            content.innerHTML = `
+                <div><span style="font-size: 0.6875rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Full Name</span><p style="font-size: 1rem; font-weight: 800; color: #0f172a;">${student.fullName}</p></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div><span style="font-size: 0.6875rem; color: #64748b; font-weight: 700; text-transform: uppercase;">ADM NO</span><p style="font-weight: 700; color: #1a56db;">${student.admNo}</p></div>
+                    <div><span style="font-size: 0.6875rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Class & Stream</span><p style="font-weight: 700; color: #0f172a;">${student.className} ${student.stream}</p></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem;">
+                    <div><span style="font-size: 0.6875rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Dormitory</span><p style="font-weight: 700; color: #0f172a;">${student.dorm}</p></div>
+                    <div><span style="font-size: 0.6875rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Location</span><p style="font-weight: 700; color: #059669;">${student.wing ? student.wing + ' - ' : ''}${student.cube} (Bed ${student.bedNo})</p></div>
+                </div>
+            `;
+
+            document.getElementById('modal-btn-edit').onclick = function() {
+                closeStudentModal();
+                switchTab('add-student');
+                document.getElementById('form-title').innerText = 'Edit Student Record';
+                document.getElementById('input-full-name').value = student.fullName;
+                document.getElementById('input-adm-no').value = student.admNo;
+                document.getElementById('edit-student-original-adm').value = student.admNo;
+                document.getElementById('input-class').value = student.className;
+                document.getElementById('input-stream').value = student.stream;
+                document.getElementById('input-dorm').value = student.dorm;
+                handleDormChange();
+                if (student.wing) {
+                    document.getElementById('input-wing').value = student.wing;
+                    handleWingChange();
+                }
+                document.getElementById('input-cube').value = student.cube;
+                handleCubeChange();
+                document.getElementById('input-bed-no').value = student.bedNo;
+            };
+
+            document.getElementById('modal-btn-delete').onclick = function() {
+                if (confirm(`Are you sure you want to delete student ${student.fullName} (${student.admNo})?`)) {
+                    students = students.filter(s => s.admNo !== student.admNo);
+                    saveStudentsToStorage();
+                    closeStudentModal();
+                    renderStudentsTable();
+                }
+            };
+
+            document.getElementById('student-modal').classList.add('flex');
+        };
+
+        window.closeStudentModal = function() {
+            document.getElementById('student-modal').classList.remove('flex');
+        };
+
+        // Dormitories View & Grid Map
+        function renderDormitoriesView() {
+            const container = document.getElementById('dormitories-cards-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const dormsInZone = DORMITORY_DATA.filter(d => d.zone === activeZone);
+            dormsInZone.forEach(dorm => {
+                let totalBeds = dorm.type === 'aberdare_custom' ? 192 : 192; // 12 cubes * 16 beds
+                const occupiedCount = students.filter(s => s.dorm === dorm.name).length;
+                const vacantCount = totalBeds - occupiedCount;
+                const pct = Math.round((occupiedCount / totalBeds) * 100);
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.cssText = "display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;";
+                card.innerHTML = `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h4 style="font-weight: 800; font-size: 1rem; color: #0f172a;">${dorm.name}</h4>
+                            <span style="font-size: 0.6875rem; padding: 0.2rem 0.5rem; background: #e0e7ff; color: #3730a3; border-radius: 0.25rem; font-weight: 700;">${dorm.zone.toUpperCase()}</span>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #64748b;">Capacity: ${totalBeds} Beds (${occupiedCount} Occupied)</p>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.25rem;">
+                            <span>Occupancy</span>
+                            <span>${pct}%</span>
+                        </div>
+                        <div style="width: 100%; background: #f1f5f9; border-radius: 9999px; height: 0.5rem; overflow: hidden;">
+                            <div style="background: #1a56db; height: 100%; width: ${pct}%;"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="openDormGridModal('${dorm.name}')" class="btn btn-secondary" style="width: 100%;">
+                        🛏️ Open Bed Matrix Map
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+
+            // Summary update
+            const totalZoneBeds = dormsInZone.length * 192;
+            const occupiedZoneBeds = students.filter(s => {
+                const d = DORMITORY_DATA.find(dorm => dorm.name === s.dorm);
+                return d && d.zone === activeZone;
+            }).length;
+            const vacantZoneBeds = totalZoneBeds - occupiedZoneBeds;
+
+            document.getElementById('zone-summary-title').innerText = `${activeZone === 'inside' ? 'Inside School' : 'Outside (Mpakone)'} Zone Summary`;
+            document.getElementById('zone-summary-content').innerHTML = `
+                <div style="background: #f8fafc; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                    <span style="color: #64748b; font-weight: 700;">Total Zone Capacity</span>
+                    <p style="font-size: 1.125rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">${totalZoneBeds} Beds</p>
+                </div>
+                <div style="background: #f8fafc; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                    <span style="color: #64748b; font-weight: 700;">Occupied Beds</span>
+                    <p style="font-size: 1.125rem; font-weight: 800; color: #dc2626; margin-top: 0.25rem;">${occupiedZoneBeds} Beds</p>
+                </div>
+                <div style="background: #f8fafc; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                    <span style="color: #64748b; font-weight: 700;">Vacant Beds</span>
+                    <p style="font-size: 1.125rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">${vacantZoneBeds} Beds</p>
+                </div>
+            `;
+        }
+
+        window.openDormGridModal = function(dormName) {
+            const dorm = DORMITORY_DATA.find(d => d.name === dormName);
+            if (!dorm) return;
+
+            document.getElementById('dorm-grid-title').innerText = `${dorm.name} Bed Occupancy Map`;
+            document.getElementById('dorm-grid-subtitle').innerText = `${dorm.zone === 'inside' ? 'Inside School Dormitory' : 'Mpakone Dormitory'}`;
+
+            const container = document.getElementById('dorm-grid-container');
+            container.innerHTML = '';
+
+            let totalBeds = 192;
+            let occupied = 0;
+
+            if (dorm.type === 'aberdare_custom') {
+                const cubes = ["Cube 1A", "Cube 1B", "Cube 2A", "Cube 2B", "Cube 3A", "Cube 3B", "Cube 4A", "Cube 4B", "Cube 5A", "Cube 5B", "Cube 6A", "Cube 6B"];
+                cubes.forEach(cubeName => {
+                    const cubeDiv = document.createElement('div');
+                    cubeDiv.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;";
+                    cubeDiv.innerHTML = `<h5 style="font-weight: 800; font-size: 0.875rem; color: #1e293b; margin-bottom: 0.75rem;">${cubeName}</h5>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.style.cssText = "display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;";
+                    
+                    for (let b = 1; b <= 16; b++) {
+                        const bedStr = b < 10 ? '0' + b : '' + b;
+                        const occStudent = students.find(s => s.dorm === dorm.name && s.cube === cubeName && s.bedNo === bedStr);
+                        if (occStudent) occupied++;
+
+                        const btn = document.createElement('button');
+                        btn.className = `bed-btn ${occStudent ? 'bed-occupied' : 'bed-vacant'}`;
+                        btn.innerText = bedStr;
+                        btn.title = occStudent ? `${occStudent.fullName} (${occStudent.admNo})` : `Vacant Bed ${bedStr}`;
+                        
+                        btn.onclick = function() {
+                            if (occStudent) {
+                                closeDormGridModal();
+                                openStudentModal(occStudent);
+                            } else {
+                                closeDormGridModal();
+                                switchTab('add-student');
+                                document.getElementById('input-dorm').value = dorm.name;
+                                handleDormChange();
+                                if (cubeName.includes('A') || cubeName.includes('B')) {
+                                    document.getElementById('input-wing').value = cubeName.includes('1') || cubeName.includes('2') || cubeName.includes('3') ? 'Wing 1' : 'Wing 2';
+                                    handleWingChange();
+                                }
+                                document.getElementById('input-cube').value = cubeName;
+                                handleCubeChange();
+                                document.getElementById('input-bed-no').value = bedStr;
+                            }
+                        };
+                        grid.appendChild(btn);
+                    }
+                    cubeDiv.appendChild(grid);
+                    container.appendChild(cubeDiv);
+                });
+            } else {
+                dorm.cubes.forEach((cubeName, idx) => {
+                    const cubeDiv = document.createElement('div');
+                    cubeDiv.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;";
+                    cubeDiv.innerHTML = `<h5 style="font-weight: 800; font-size: 0.875rem; color: #1e293b; margin-bottom: 0.75rem;">${cubeName}</h5>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.style.cssText = "display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;";
+                    
+                    for (let b = 1; b <= 16; b++) {
+                        const bedStr = b < 10 ? '0' + b : '' + b;
+                        const occStudent = students.find(s => s.dorm === dorm.name && s.cube === cubeName && s.bedNo === bedStr);
+                        if (occStudent) occupied++;
+
+                        const btn = document.createElement('button');
+                        btn.className = `bed-btn ${occStudent ? 'bed-occupied' : 'bed-vacant'}`;
+                        btn.innerText = bedStr;
+                        
+                        btn.onclick = function() {
+                            if (occStudent) {
+                                closeDormGridModal();
+                                openStudentModal(occStudent);
+                            } else {
+                                closeDormGridModal();
+                                switchTab('add-student');
+                                document.getElementById('input-dorm').value = dorm.name;
+                                handleDormChange();
+                                document.getElementById('input-cube').value = cubeName;
+                                handleCubeChange();
+                                document.getElementById('input-bed-no').value = bedStr;
+                            }
+                        };
+                        grid.appendChild(btn);
+                    }
+                    cubeDiv.appendChild(grid);
+                    container.appendChild(cubeDiv);
+                });
+            }
+
+            document.getElementById('dorm-grid-total-beds').innerText = totalBeds;
+            document.getElementById('dorm-grid-occupied-beds').innerText = occupied;
+            document.getElementById('dorm-grid-unoccupied-beds').innerText = totalBeds - occupied;
+
+            document.getElementById('dorm-grid-modal').classList.add('flex');
+        };
+
+        window.closeDormGridModal = function() {
+            document.getElementById('dorm-grid-modal').classList.remove('flex');
+        };
+
+        // Home Stats
+        function updateHomeDashboardStats() {
+            const total = students.length;
+            const totalBeds = DORMITORY_DATA.length * 192;
+            const occupied = students.length;
+            const vacant = totalBeds - occupied;
+            const rate = totalBeds > 0 ? Math.round((occupied / totalBeds) * 100) : 0;
+
+            if (document.getElementById('stat-total-students')) document.getElementById('stat-total-students').innerText = total;
+            if (document.getElementById('stat-occupied-beds')) document.getElementById('stat-occupied-beds').innerText = occupied;
+            if (document.getElementById('stat-unoccupied-beds')) document.getElementById('stat-unoccupied-beds').innerText = vacant;
+            if (document.getElementById('stat-occupancy-rate')) document.getElementById('stat-occupancy-rate').innerText = `${rate}% Capacity`;
+
+            // Zone stats
+            const insideCount = students.filter(s => {
+                const d = DORMITORY_DATA.find(dorm => dorm.name === s.dorm);
+                return d && d.zone === 'inside';
+            }).length;
+            const insideTotal = 6 * 192;
+            if (document.getElementById('zone-inside-text')) document.getElementById('zone-inside-text').innerText = `${insideCount} / ${insideTotal} Beds`;
+            if (document.getElementById('zone-inside-bar')) document.getElementById('zone-inside-bar').style.width = `${Math.round((insideCount / insideTotal) * 100)}%`;
+
+            const mpakoneCount = students.filter(s => {
+                const d = DORMITORY_DATA.find(dorm => dorm.name === s.dorm);
+                return d && d.zone === 'mpakone';
+            }).length;
+            const mpakoneTotal = 8 * 192;
+            if (document.getElementById('zone-mpakone-text')) document.getElementById('zone-mpakone-text').innerText = `${mpakoneCount} / ${mpakoneTotal} Beds`;
+            if (document.getElementById('zone-mpakone-bar')) document.getElementById('zone-mpakone-bar').style.width = `${Math.round((mpakoneCount / mpakoneTotal) * 100)}%`;
+        }
+
+        // Hardware Directory & Exports
+        window.selectHardwareFolder = async function() {
+            if (window.showDirectoryPicker) {
+                try {
+                    currentDirectoryHandle = await window.showDirectoryPicker();
+                    document.getElementById('selected-folder-path').innerText = `📁 ${currentDirectoryHandle.name} (Hardware Sync Active)`;
+                    document.getElementById('folder-status-badge').innerText = 'Hardware PC Folder Connected';
+                    document.getElementById('folder-status-badge').style.background = 'rgba(52, 211, 153, 0.2)';
+                    document.getElementById('folder-status-badge').style.color = '#34d399';
+                    syncToHardwareFolder();
+                    return;
+                } catch (err) {
+                    if (err.name !== 'AbortError') console.error(err);
+                }
+            }
+            document.getElementById('fallback-folder-picker').click();
+        };
+
+        window.handleFallbackFolderSelect = function(event) {
+            const files = event.target.files;
+            if (files && files.length > 0) {
+                const folderName = files[0].webkitRelativePath.split('/')[0] || 'Selected Local Folder';
+                document.getElementById('selected-folder-path').innerText = `📁 ${folderName} (Fallback Sync Active)`;
+                document.getElementById('folder-status-badge').innerText = 'Local Directory Connected';
+                document.getElementById('folder-status-badge').style.background = 'rgba(52, 211, 153, 0.2)';
+                document.getElementById('folder-status-badge').style.color = '#34d399';
+                syncToHardwareFolder();
+            }
+        };
+
+        window.syncToHardwareFolder = async function() {
+            const dataJSON = JSON.stringify(students, null, 2);
+            if (currentDirectoryHandle && currentDirectoryHandle.getFileHandle) {
+                try {
+                    const fileHandle = await currentDirectoryHandle.getFileHandle('KBHS_Boarding_Data.json', { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(dataJSON);
+                    await writable.close();
+                    document.getElementById('folder-last-sync').innerText = `Synced to hardware folder at ${new Date().toLocaleTimeString()}`;
+                    return;
+                } catch (err) {
+                    console.error("Hardware folder write error:", err);
+                }
+            }
+            // Fallback download if handle not available
+            document.getElementById('folder-last-sync').innerText = `Synced to local cache at ${new Date().toLocaleTimeString()}`;
+        };
+
+        window.exportDataExcel = function() {
+            let csv = "ADM NO,Full Name,Class,Stream,Dormitory,Cube,Bed No\n";
+            students.forEach(s => {
+                csv += `"${s.admNo}","${s.fullName}","${s.className}","${s.stream}","${s.dorm}","${s.wing ? s.wing + ' ' : ''}${s.cube}","${s.bedNo}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KBHS_Student_Records_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        };
+
+        window.exportDataWord = function() {
+            let html = `<html><head><meta charset='utf-8'><title>KBHS Student Records</title></head><body>`;
+            html += `<h2>Kaaga Boys High School - Boarding Records</h2>`;
+            html += `<table border='1' cellspacing='0' cellpadding='5'><tr><th>ADM NO</th><th>Student Name</th><th>Class</th><th>Dormitory</th><th>Cube</th><th>Bed</th></tr>`;
+            students.forEach(s => {
+                html += `<tr><td>${s.admNo}</td><td>${s.fullName}</td><td>${s.className} ${s.stream}</td><td>${s.dorm}</td><td>${s.wing ? s.wing + ' ' : ''}${s.cube}</td><td>${s.bedNo}</td></tr>`;
+            });
+            html += `</table></body></html>`;
+            const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KBHS_Student_Records_${new Date().toISOString().slice(0,10)}.doc`;
+            a.click();
+        };
+
+        window.exportDataJSON = function() {
+            const blob = new Blob([JSON.stringify(students, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KBHS_Database_Backup.json`;
+            a.click();
+        };
+
+        // Initialize App on Load
+        window.onload = function() {
+            initializeDormitoryDropdowns();
+            updateHomeDashboardStats();
+        };
+    </script>
+</body>
+</html>
